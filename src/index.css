@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 @theme {
   --color-cyan: #06B6D4;
@@ -10,4 +11,80 @@
   --color-darktext: #0F172A;
   --color-graytext: #64748B;
   --color-border: #E2E8F0;
+  --font-sans: 'Inter', sans-serif;
 }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  min-height: 100vh;
+  color: #f1f5f9;
+}
+
+/* Glassmorphism card */
+.glass {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.25rem;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(90deg, #06B6D4, #EC4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gradient button */
+.btn-gradient {
+  background: linear-gradient(90deg, #06B6D4, #EC4899);
+  color: white;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  border-radius: 0.75rem;
+}
+.btn-gradient:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-gradient:active { transform: translateY(0); }
+
+/* Animated progress bar */
+.macro-bar {
+  height: 8px;
+  border-radius: 99px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Input styling */
+.input-dark {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #f1f5f9;
+  border-radius: 0.75rem;
+  padding: 0.65rem 1rem;
+  width: 100%;
+  transition: border-color 0.2s;
+  outline: none;
+}
+.input-dark:focus { border-color: #06B6D4; box-shadow: 0 0 0 3px rgba(6,182,212,0.2); }
+.input-dark::placeholder { color: #64748b; }
+.input-dark option { background: #1e293b; }
+
+/* Meal card hover */
+.meal-card {
+  transition: background 0.15s, transform 0.15s;
+}
+.meal-card:hover {
+  background: rgba(255,255,255,0.07);
+  transform: translateX(3px);
+}
+
+/* Scroll bar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 99px; }

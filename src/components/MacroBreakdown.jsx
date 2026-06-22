@@ -1,39 +1,36 @@
 import React from 'react';
 
-/**
- * MacroBreakdown displays protein, carbs, and fat progress bars.
- * Props:
- *   - macros: { protein, carbs, fat } current totals in grams
- *   - goals: { protein, carbs, fat } target grams for the day
- */
-export default function MacroBreakdown({ macros, goals }) {
-  const items = [
-    { label: 'Protein', key: 'protein', color: 'bg-cyan' },
-    { label: 'Carbs', key: 'carbs', color: 'bg-pink' },
-    { label: 'Fat', key: 'fat', color: 'bg-green' },
-  ];
+const MACROS = [
+  { label: 'Protein', key: 'protein', from: '#06B6D4', to: '#0891b2' },
+  { label: 'Carbs',   key: 'carbs',   from: '#EC4899', to: '#db2777' },
+  { label: 'Fat',     key: 'fat',     from: '#10B981', to: '#059669' },
+];
 
+export default function MacroBreakdown({ macros = {}, goals = {} }) {
   return (
     <div className="space-y-4">
-      {items.map(({ label, key, color }) => {
+      {MACROS.map(({ label, key, from, to }) => {
         const current = macros[key] || 0;
         const target = goals[key] || 0;
-        const percent = target ? Math.min(100, Math.round((current / target) * 100)) : 0;
-        const over = current - target;
-        const helperText = over > 0 ? `${over}g over` : 'On track';
+        const pct = target ? Math.min(100, Math.round((current / target) * 100)) : 0;
         return (
           <div key={key}>
-            <div className="flex justify-between text-sm font-medium text-darktext mb-1">
-              <span>{label}</span>
-              <span>{current} / {target}g ({percent}%)</span>
+            <div className="flex justify-between text-sm mb-1.5">
+              <span className="font-semibold text-white">{label}</span>
+              <span className="text-slate-400">
+                <span style={{ color: from }} className="font-bold">{current}g</span>
+                &nbsp;/ {target}g
+              </span>
             </div>
-            <div className="w-full bg-lightgray rounded h-4 overflow-hidden">
+            <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
               <div
-                className={`${color} h-4`}
-                style={{ width: `${percent}%`, transition: 'width 0.3s ease-out' }}
+                className="h-2 rounded-full macro-bar"
+                style={{
+                  width: `${pct}%`,
+                  background: `linear-gradient(90deg, ${from}, ${to})`,
+                }}
               />
             </div>
-            <div className="text-xs text-graytext mt-0.5">{helperText}</div>
           </div>
         );
       })}
