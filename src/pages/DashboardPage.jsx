@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -14,6 +15,7 @@ import {
   Wheat,
   Check,
   X,
+  LogOut,
 } from "lucide-react";
 import {
   AreaChart,
@@ -27,60 +29,8 @@ import {
   PieChart,
   Pie,
 } from "recharts";
-
-const weeklyData = [
-  { day: "Mon", calories: 1820, goal: 2000 },
-  { day: "Tue", calories: 2100, goal: 2000 },
-  { day: "Wed", calories: 1750, goal: 2000 },
-  { day: "Thu", calories: 1980, goal: 2000 },
-  { day: "Fri", calories: 2240, goal: 2000 },
-  { day: "Sat", calories: 1650, goal: 2000 },
-  { day: "Sun", calories: 1430, goal: 2000 },
-];
-
-const macroData = [
-  { name: "Protein", value: 142, goal: 160, color: "#2D4A3E" },
-  { name: "Carbs", value: 198, goal: 250, color: "#D4845A" },
-  { name: "Fat", value: 58, goal: 70, color: "#7FB5A0" },
-];
-
-const meals = [
-  {
-    name: "Breakfast",
-    time: "7:42 AM",
-    calories: 412,
-    items: ["Greek yogurt with granola", "Blueberries", "Black coffee"],
-  },
-  {
-    name: "Lunch",
-    time: "12:15 PM",
-    calories: 680,
-    items: ["Grilled chicken salad", "Sourdough bread", "Sparkling water"],
-  },
-  {
-    name: "Dinner",
-    time: "7:00 PM",
-    calories: 740,
-    items: ["Salmon fillet", "Roasted sweet potato", "Steamed broccoli"],
-  },
-  {
-    name: "Snacks",
-    time: "3:30 PM",
-    calories: 168,
-    items: ["Almonds (28g)", "Apple"],
-  },
-];
-
-const todayCalories = 2000;
-const consumed = 1432;
-const remaining = todayCalories - consumed;
-const burnedExercise = 320;
-const netCalories = consumed - burnedExercise;
-
-const ringData = [
-  { name: "consumed", value: consumed, fill: "#2D4A3E" },
-  { name: "remaining", value: remaining, fill: "#EDE7DE" },
-];
+import { authAPI, mealsAPI } from "../services/api";
+import { useCalories } from "../hooks/useCalories";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", active: true },
@@ -97,13 +47,61 @@ const recentFoods = [
 ];
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
+  const { profile, meals, totals, addMeal, deleteMeal, isAuthenticated } = useCalories();
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [waterGlasses, setWaterGlasses] = useState(5);
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const waterGoal = 8;
+  const todayCalories = profile.tdee || 2000;
+  const consumed = totals.calories;
+  const remaining = todayCalories - consumed;
+  const burnedExercise = 320;
+  const netCalories = consumed - burnedExercise;
   const percentage = Math.round((consumed / todayCalories) * 100);
+
+  const ringData = [
+    { name: "consumed", value: consumed, fill: "#2D4A3E" },
+    { name: "remaining", value: remaining > 0 ? remaining : 0, fill: "#EDE7DE" },
+  ];
+
+  const macroData = [
+    { name: "Protein", value: totals.protein, goal: profile.macroGoals?.protein || 160, color: "#2D4A3E" },
+    { name: "Carbs", value: totals.carbs, goal: profile.macroGoals?.carbs || 250, color: "#D4845A" },
+    { name: "Fat", value: totals.fat, goal: profile.macroGoals?.fat || 70, color: "#7FB5A0" },
+  ];
+
+  const weeklyData = [
+    { day: "Mon", calories: 1820, goal: todayCalories },
+    { day: "Tue", calories: 2100, goal: todayCalories },
+    { day: "Wed", calories: 1750, goal: todayCalories },
+    { day: "Thu", calories: 1980, goal: todayCalories },
+    { day: "Fri", calories: 2240, goal: todayCalories },
+    { day: "Sat", calories: 1650, goal: todayCalories },
+    { day: "Sun", calories: consumed, goal: todayCalories },
+  ];
+
+  const handleLogout = () => {
+    authAPI.logout();
+    navigate('/login');
+  };
+
+  const handleAddMeal = async (foodName) => {
+    const food = recentFoods.find(f => f.name === foodName);
+    if (food) {
+      await addMeal({
+        name: food.name,
+        calories: food.cal,
+        protein: parseInt(food.protein),
+        carbs: 0,
+        fat: 0,
+        category: 'Snack',
+      });
+      setShowAddModal(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -142,6 +140,7 @@ export default function DashboardPage() {
               {recentFoods.map((food) => (
                 <div
                   key={food.name}
+                  onClick={() => handleAddMeal(food.name)}
                   className="flex items-center justify-between p-3 rounded-xl hover:bg-muted cursor-pointer transition-colors group"
                 >
                   <div>
@@ -201,23 +200,13 @@ export default function DashboardPage() {
           </nav>
 
           <div className="mt-auto">
-            <div className="rounded-xl bg-muted p-4">
-              <p className="text-xs text-muted-foreground mb-1">Weekly streak</p>
-              <p
-                className="text-2xl text-foreground"
-                style={{ fontFamily: "'DM Mono', monospace" }}
-              >
-                14 days
-              </p>
-              <div className="flex gap-1 mt-2">
-                {Array.from({ length: 7 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-1.5 flex-1 rounded-full ${i < 5 ? "bg-primary" : "bg-border"}`}
-                  />
-                ))}
-              </div>
-            </div>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-muted transition-colors"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
           </div>
         </aside>
 
@@ -227,13 +216,13 @@ export default function DashboardPage() {
           <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-widest" style={{ fontFamily: "'DM Mono', monospace" }}>
-                Monday, June 23
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </p>
               <h1
                 className="text-xl text-foreground mt-0.5"
                 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500 }}
               >
-                Good morning, Alex
+                Good morning, {profile.name || 'there'}
               </h1>
             </div>
             <div className="flex items-center gap-3">
@@ -405,33 +394,40 @@ export default function DashboardPage() {
                 </button>
               </div>
               <div className="space-y-3">
-                {meals.map((meal) => (
-                  <div
-                    key={meal.name}
-                    className="group flex items-start gap-4 p-4 rounded-xl hover:bg-muted transition-colors cursor-pointer"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-muted group-hover:bg-card flex items-center justify-center flex-shrink-0 transition-colors">
-                      <UtensilsCrossed size={16} className="text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-foreground">{meal.name}</p>
-                        <p
-                          className="text-sm text-foreground"
-                          style={{ fontFamily: "'DM Mono', monospace" }}
-                        >
-                          {meal.calories} kcal
+                {meals.length > 0 ? (
+                  meals.map((meal) => (
+                    <div
+                      key={meal._id || meal.id}
+                      className="group flex items-start gap-4 p-4 rounded-xl hover:bg-muted transition-colors cursor-pointer"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-muted group-hover:bg-card flex items-center justify-center flex-shrink-0 transition-colors">
+                        <UtensilsCrossed size={16} className="text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-foreground">{meal.name}</p>
+                          <p
+                            className="text-sm text-foreground"
+                            style={{ fontFamily: "'DM Mono', monospace" }}
+                          >
+                            {meal.calories} kcal
+                          </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {meal.protein || 0}g protein · {meal.carbs || 0}g carbs · {meal.fat || 0}g fat
                         </p>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {meal.items.join(" · ")}
-                      </p>
+                      <button
+                        onClick={() => deleteMeal(meal._id || meal.id)}
+                        className="text-xs text-destructive hover:text-destructive/80 flex-shrink-0 mt-0.5"
+                      >
+                        Delete
+                      </button>
                     </div>
-                    <p className="text-xs text-muted-foreground flex-shrink-0 mt-0.5" style={{ fontFamily: "'DM Mono', monospace" }}>
-                      {meal.time}
-                    </p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-sm text-center py-4">No meals logged today</p>
+                )}
               </div>
               <button
                 onClick={() => setShowAddModal(true)}

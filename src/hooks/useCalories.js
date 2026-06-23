@@ -1,13 +1,14 @@
 // src/hooks/useCalories.js
 import { useState, useEffect, useCallback } from 'react';
+import { profileAPI, mealsAPI, getToken } from '../services/api';
 
 const PROFILE_KEY = 'calorieflow_userProfile';
 const MEALS_KEY = 'calorieflow_todaysMeals';
 const UPDATED_KEY = 'calorieflow_lastUpdated';
 
 /**
- * Hook to manage user profile and meals with localStorage persistence.
- * Returns the stored profile, meals array, totals, and CRUD functions.
+ * Hook to manage user profile and meals with API integration.
+ * Falls back to localStorage if no token is present.
  */
 export function useCalories() {
   const [profile, setProfile] = useState(() => {
@@ -28,36 +29,123 @@ export function useCalories() {
     }
   });
 
-  // sync profile to localStorage
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const isAuthenticated = !!getToken();
+
+  // Load profile from API on mount if authenticated
   useEffect(() => {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-    localStorage.setItem(UPDATED_KEY, new Date().toISOString());
-  }, [profile]);
+    const loadProfile = async () => {
+      if (isAuthenticated) {
+        try {
+          setLoading(true);
+          const data = await profileAPI.getProfile();
+          setProfile(data);
+        } catch (err) {
+          console.error('Failed to load profile:', err);
+          // Fall back to localStorage
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    loadProfile();
+  }, [isAuthenticated]);
 
-  // sync meals to localStorage
+  // Load meals from API on mount if authenticated
   useEffect(() => {
-    localStorage.setItem(MEALS_KEY, JSON.stringify(meals));
-    localStorage.setItem(UPDATED_KEY, new Date().toISOString());
-  }, [meals]);
+    const loadMeals = async () => {
+      if (isAuthenticated) {
+        try {
+          setLoading(true);
+          const data = await mealsAPI.getToday();
+          setMeals(data);
+        } catch (err) {
+          console.error('Failed to load meals:', err);
+          // Fall back to localStorage
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    loadMeals();
+  }, [isAuthenticated]);
 
-  const addMeal = useCallback((meal) => {
-    setMeals((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        ...meal,
-      },
-    ]);
-  }, []);
+  // sync profile to localStorage (fallback)
+  useEffect(() => {
+    if (!isAuthenticated) {
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      localStorage.setItem(UPDATED_KEY, new Date().toISOString());
+    }
+  }, [profile, isAuthenticated]);
 
-  const deleteMeal = useCallback((id) => {
-    setMeals((prev) => prev.filter((m) => m.id !== id));
-  }, []);
+  // sync meals to localStorage (fallback)
+  useEffect(() => {
+    if (!isAuthenticated) {
+      localStorage.setItem(MEALS_KEY, JSON.stringify(meals));
+      localStorage.setItem(UPDATED_KEY, new Date().toISOString());
+    }
+  }, [meals, isAuthenticated]);
 
-  const updateProfile = useCallback((newProfile) => {
-    setProfile((prev) => ({ ...prev, ...newProfile }));
-  }, []);
+  const addMeal = useCallback(async (meal) => {
+    if (isAuthenticated) {
+      try {
+        const newMeal = await mealsAPI.create(meal);
+        setMeals((prev) => [...prev, newMeal]);
+      } catch (err) {
+        console.error('Failed to add meal:', err);
+        // Fall back to localStorage
+        setMeals((prev) => [
+          ...prev,
+          {
+            _id: Date.now().toString(),
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            ...meal,
+          },
+        ]);
+      }
+    } else {
+      setMeals((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          ...meal,
+        },
+      ]);
+    }
+  }, [isAuthenticated]);
+
+  const deleteMeal = useCallback(async (id) => {
+    if (isAuthenticated) {
+      try {
+        await mealsAPI.delete(id);
+        setMeals((prev) => prev.filter((m) => m._id !== id));
+      } catch (err) {
+        console.error('Failed to delete meal:', err);
+        // Fall back to localStorage
+        setMeals((prev) => prev.filter((m) => m.id !== id || m._id !== id));
+      }
+    } else {
+      setMeals((prev) => prev.filter((m) => m.id !== id));
+    }
+  }, [isAuthenticated]);
+
+  const updateProfile = useCallback(async (newProfile) => {
+    if (isAuthenticated) {
+      try {
+        const updated = await profileAPI.updateProfile(newProfile);
+        setProfile(updated);
+      } catch (err) {
+        console.error('Failed to update profile:', err);
+        // Fall back to localStorage
+        setProfile((prev) => ({ ...prev, ...newProfile }));
+      }
+    } else {
+      setProfile((prev) => ({ ...prev, ...newProfile }));
+    }
+  }, [isAuthenticated]);
 
   const totals = meals.reduce(
     (acc, m) => {
@@ -77,5 +165,8 @@ export function useCalories() {
     addMeal,
     deleteMeal,
     updateProfile,
+    loading,
+    error,
+    isAuthenticated,
   };
 }
