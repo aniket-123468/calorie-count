@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
+import { ArrowLeft, Plus } from 'lucide-react';
 import CircularProgress from '../components/CircularProgress';
 import MacroBreakdown from '../components/MacroBreakdown';
 import MealList from '../components/MealList';
@@ -29,8 +30,8 @@ function buildWeekData(meals) {
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="glass px-3 py-2 text-sm text-white">
-        <span className="font-bold gradient-text">{payload[0].value}</span> kcal
+      <div className="bg-card px-3 py-2 text-sm text-foreground border border-border rounded-lg shadow-lg">
+        <span className="font-bold text-primary">{payload[0].value}</span> kcal
       </div>
     );
   }
@@ -56,85 +57,98 @@ export default function TrackerPage() {
   const weekData = buildWeekData(meals);
   const pct = Math.min(100, Math.round((totals.calories / tdee) * 100));
 
+  const goToDashboard = () => window.location.href = '/dashboard';
+
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 py-8 space-y-6">
-      <div>
-        <h2 className="text-4xl font-extrabold gradient-text mb-1">Today's Tracker</h2>
-        <p className="text-slate-400 text-sm">
-          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-        </p>
-      </div>
-
-      {/* Progress ring + macro bars */}
-      <div className="glass p-6 flex flex-col sm:flex-row gap-6 items-center">
-        <div className="flex flex-col items-center shrink-0">
-          <CircularProgress calories={totals.calories} goal={tdee} size={160} />
-          <div className="mt-3 text-xs text-slate-400">{pct}% of daily goal</div>
+    <div className="min-h-screen bg-background text-foreground" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <div className="w-full max-w-2xl mx-auto px-4 py-8 space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-8">
+          <button
+            onClick={goToDashboard}
+            className="p-2 rounded-xl bg-card border border-border hover:bg-muted transition-colors"
+          >
+            <ArrowLeft size={16} className="text-foreground" />
+          </button>
+          <div>
+            <h2
+              className="text-2xl text-foreground"
+              style={{ fontFamily: "'Playfair Display', serif", fontWeight: 500 }}
+            >
+              Today's Tracker
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
         </div>
-        <div className="flex-1 w-full">
-          <MacroBreakdown macros={totals} goals={macroGoals} />
+
+        {/* Progress ring + macro bars */}
+        <div className="bg-card rounded-2xl border border-border p-6 flex flex-col sm:flex-row gap-6 items-center">
+          <div className="flex flex-col items-center shrink-0">
+            <CircularProgress calories={totals.calories} goal={tdee} size={160} />
+            <div className="mt-3 text-xs text-muted-foreground" style={{ fontFamily: "'DM Mono', monospace" }}>{pct}% of daily goal</div>
+          </div>
+          <div className="flex-1 w-full">
+            <MacroBreakdown macros={totals} goals={macroGoals} />
+          </div>
         </div>
-      </div>
 
-      {/* Weekly bar chart (Recharts) */}
-      <div className="glass p-5">
-        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">Weekly Overview</h3>
-        <ResponsiveContainer width="100%" height={150}>
-          <BarChart data={weekData} barCategoryGap="30%">
-            <XAxis
-              dataKey="day"
-              tick={{ fill: '#64748b', fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis hide />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-            <Bar dataKey="calories" radius={[6, 6, 0, 0]}>
-              {weekData.map((entry, index) => (
-                <Cell
-                  key={index}
-                  fill={
-                    index === weekData.length - 1
-                      ? 'url(#barGradient)'
-                      : 'rgba(255,255,255,0.1)'
-                  }
-                />
-              ))}
-            </Bar>
-            <defs>
-              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#06B6D4" />
-                <stop offset="100%" stopColor="#EC4899" />
-              </linearGradient>
-            </defs>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Quick add */}
-      <div className="glass p-5">
-        <QuickAdd />
-      </div>
-
-      {/* Add custom meal */}
-      <button
-        type="button"
-        onClick={() => setFormOpen(true)}
-        className="btn-gradient w-full py-3.5 text-base rounded-xl"
-      >
-        + Add Custom Meal
-      </button>
-
-      {isFormOpen && <MealForm isOpen={true} onClose={() => setFormOpen(false)} />}
-
-      {/* Meal list */}
-      {meals && meals.length > 0 ? (
-        <div className="glass overflow-hidden">
-          <MealList meals={meals} onDelete={deleteMeal} onAddSimilar={handleAddSimilar} />
+        {/* Weekly bar chart (Recharts) */}
+        <div className="bg-card rounded-2xl border border-border p-5">
+          <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-4" style={{ fontFamily: "'DM Mono', monospace" }}>Weekly Overview</h3>
+          <ResponsiveContainer width="100%" height={150}>
+            <BarChart data={weekData} barCategoryGap="30%">
+              <XAxis
+                dataKey="day"
+                tick={{ fill: '#7A6E65', fontSize: 12, fontFamily: "'DM Mono', monospace" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis hide />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(45, 74, 62, 0.05)' }} />
+              <Bar dataKey="calories" radius={[6, 6, 0, 0]}>
+                {weekData.map((entry, index) => (
+                  <Cell
+                    key={index}
+                    fill={
+                      index === weekData.length - 1
+                        ? '#2D4A3E'
+                        : 'rgba(45, 74, 62, 0.2)'
+                    }
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-      ) : (
-        <EmptyState message="No meals logged yet. Use Quick Add or add a custom meal!" />
-      )}
+
+        {/* Quick add */}
+        <div className="bg-card rounded-2xl border border-border p-5">
+          <QuickAdd />
+        </div>
+
+        {/* Add custom meal */}
+        <button
+          type="button"
+          onClick={() => setFormOpen(true)}
+          className="btn-gradient w-full py-3.5 text-base rounded-xl flex items-center justify-center gap-2"
+        >
+          <Plus size={16} />
+          Add Custom Meal
+        </button>
+
+        {isFormOpen && <MealForm isOpen={true} onClose={() => setFormOpen(false)} />}
+
+        {/* Meal list */}
+        {meals && meals.length > 0 ? (
+          <div className="bg-card rounded-2xl border border-border overflow-hidden">
+            <MealList meals={meals} onDelete={deleteMeal} onAddSimilar={handleAddSimilar} />
+          </div>
+        ) : (
+          <EmptyState message="No meals logged yet. Use Quick Add or add a custom meal!" />
+        )}
+      </div>
     </div>
   );
 }
