@@ -14,7 +14,9 @@ import {
   Wheat,
   Check,
   X,
+  LogOut,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   AreaChart,
   Area,
@@ -28,6 +30,7 @@ import {
   Pie,
 } from "recharts";
 import { useCalories } from "../hooks/useCalories";
+import { authAPI } from "../services/api";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", active: true },
@@ -44,6 +47,7 @@ const recentFoods = [
 ];
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const { profile, meals, totals, addMeal, deleteMeal } = useCalories();
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [waterGlasses, setWaterGlasses] = useState(5);
@@ -92,6 +96,11 @@ export default function DashboardPage() {
       });
       setShowAddModal(false);
     }
+  };
+
+  const handleLogout = () => {
+    authAPI.logout();
+    navigate('/login');
   };
 
   return (
