@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -15,7 +14,6 @@ import {
   Wheat,
   Check,
   X,
-  LogOut,
 } from "lucide-react";
 import {
   AreaChart,
@@ -29,7 +27,6 @@ import {
   PieChart,
   Pie,
 } from "recharts";
-import { authAPI, mealsAPI } from "../services/api";
 import { useCalories } from "../hooks/useCalories";
 
 const navItems = [
@@ -47,8 +44,7 @@ const recentFoods = [
 ];
 
 export default function DashboardPage() {
-  const navigate = useNavigate();
-  const { profile, meals, totals, addMeal, deleteMeal, isAuthenticated } = useCalories();
+  const { profile, meals, totals, addMeal, deleteMeal } = useCalories();
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [waterGlasses, setWaterGlasses] = useState(5);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -83,15 +79,10 @@ export default function DashboardPage() {
     { day: "Sun", calories: consumed, goal: todayCalories },
   ];
 
-  const handleLogout = () => {
-    authAPI.logout();
-    navigate('/login');
-  };
-
-  const handleAddMeal = async (foodName) => {
+  const handleAddMeal = (foodName) => {
     const food = recentFoods.find(f => f.name === foodName);
     if (food) {
-      await addMeal({
+      addMeal({
         name: food.name,
         calories: food.cal,
         protein: parseInt(food.protein),

@@ -53,7 +53,7 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label className="block text-xs text-muted-foreground uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono', monospace' }}>
+              <label className="block text-xs text-muted-foreground uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono', monospace" }}>
                 Email
               </label>
               <input
@@ -68,7 +68,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-xs text-muted-foreground uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono', monospace' }}>
+              <label className="block text-xs text-muted-foreground uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono', monospace" }}>
                 Password
               </label>
               <input

@@ -66,7 +66,7 @@ export default function RegisterPage() {
             )}
 
             <div>
-              <label className="block text-xs text-muted-foreground uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono', monospace' }}>
+              <label className="block text-xs text-muted-foreground uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono', monospace" }}>
                 Name
               </label>
               <input
@@ -81,7 +81,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-xs text-muted-foreground uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono', monospace' }}>
+              <label className="block text-xs text-muted-foreground uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono', monospace" }}>
                 Email
               </label>
               <input
@@ -96,7 +96,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-xs text-muted-foreground uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono', monospace' }}>
+              <label className="block text-xs text-muted-foreground uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono', monospace" }}>
                 Password
               </label>
               <input
@@ -111,7 +111,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-xs text-muted-foreground uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono', monospace' }}>
+              <label className="block text-xs text-muted-foreground uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono', monospace" }}>
                 Confirm Password
               </label>
               <input
