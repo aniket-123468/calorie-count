@@ -28,7 +28,7 @@ router.put('/', protect, async (req, res) => {
 
       const updatedUser = await user.save();
 
-      res.json(updatedUser);
+      res.json(updatedUser.profile);
     } else {
       res.status(404).json({ message: 'User not found' });
     }
